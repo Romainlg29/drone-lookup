@@ -1,10 +1,7 @@
-from collections import defaultdict
 import torch
-from datasets import load_dataset
 from ultralytics import YOLO
 import os
 import cv2
-import numpy as np
 
 
 if __name__ == "__main__":
@@ -56,9 +53,6 @@ if __name__ == "__main__":
     output_video_path = f"{output_dir}/output_detection.mp4"
     out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
-    # Store the track history
-    track_history = defaultdict(lambda: [])
-
     # Loop through video frames
     while cap.isOpened():
 
@@ -69,39 +63,13 @@ if __name__ == "__main__":
             break
 
         # Track
-        result = model.track(frame, persist=True, verbose=False, device=device)[0]
-
-        # If no boxes detected, write the original frame
-        if not result.boxes or not result.boxes.is_track:
-            out.write(frame)
-
-            continue
-
-        boxes = result.boxes.xywh.cpu()
-        tracks = result.boxes.id.int().cpu().tolist()
+        results = model.predict(frame, conf=0.15, verbose=False, device=device)
 
         # Display the frame with detections
-        frame = result.plot()
-
-        # Plot the tracks
-        for box, id in zip(boxes, tracks):
-            x, y, w, h = box
-
-            track = track_history[id]
-            track.append((float(x), float(y)))
-
-            # Save the last 30 points
-            if len(track) > 30:
-                track.pop(0)
-
-            # Draw the track line
-            points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
-            cv2.polylines(
-                frame, [points], isClosed=False, color=(0, 255, 0), thickness=10
-            )
+        annotated_frame = results[0].plot()
 
         # Write the frame to output video
-        out.write(frame)
+        out.write(annotated_frame)
 
     # Release the video capture and close windows
     cap.release()
