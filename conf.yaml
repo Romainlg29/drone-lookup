@@ -1,0 +1,13 @@
+# Available class
+names:
+  0: drone
+
+# Number of classes
+nc: 1
+
+# Root dataset directory
+path: dataset/
+
+# Train and val images (relative to 'path')
+train: "train"
+val: "val"

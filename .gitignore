@@ -1,0 +1,5 @@
+.datasets
+dataset
+.venv
+runs
+yolo26n.pt
